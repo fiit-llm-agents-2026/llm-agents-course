@@ -38,6 +38,17 @@ PROVIDERS = ("openai_compat", "google_genai")
 # and passes the endpoint explicitly, and this script refuses to run when the
 # OpenAI ones are set.
 SHADOWING_VARS = ("OPENAI_API_BASE", "OPENAI_BASE_URL", "OPENAI_API_KEY")
+COURSE_VARS = (
+    "LLM_PROVIDER",
+    "LLM_API_KEY",
+    "LLM_BASE_URL",
+    "LLM_REASONING_EFFORT",
+    "MODEL_CHEAP",
+    "MODEL_STRONG",
+    "LANGFUSE_HOST",
+    "LANGFUSE_PUBLIC_KEY",
+    "LANGFUSE_SECRET_KEY",
+)
 
 
 class ConfigError(RuntimeError):
@@ -82,6 +93,9 @@ def chat_model(size: str = "cheap", **kwargs):
 
     name = model_id(size)
     secret = _require("LLM_API_KEY")
+    effort = os.getenv("LLM_REASONING_EFFORT", "").strip()
+    if effort:  # gpt-5.x over chat completions: tools only with reasoning "none"
+        kwargs.setdefault("reasoning_effort", effort)
     if provider() == "google_genai":
         return init_chat_model(f"google_genai:{name}", api_key=secret, **kwargs)
     return init_chat_model(
@@ -112,8 +126,8 @@ def check_python() -> bool:
     version = (
         f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     )
-    if sys.version_info < (3, 10):
-        fail("E01 python", f"found {version}", "install Python 3.10 or newer")
+    if sys.version_info < (3, 11):
+        fail("E01 python", f"found {version}", "install Python 3.11 or newer")
         return False
     return record(True, "python", version)
 
@@ -127,7 +141,11 @@ def check_packages() -> bool:
         except metadata.PackageNotFoundError:
             missing.append(name)
     if missing:
-        fail("E02 packages", f"missing {', '.join(missing)}", "run: uv sync")
+        fail(
+            "E02 packages",
+            f"missing {', '.join(missing)}",
+            "run the uv pip install line from README.md",
+        )
         return False
     return record(True, "packages", ", ".join(found))
 
@@ -151,6 +169,25 @@ def check_env_file() -> bool:
         )
         return False
     return record(True, ".env", str(path.resolve()))
+
+
+def check_comment_values() -> bool:
+    """A comment after an EMPTY value is the value: python-dotenv keeps it.
+
+    `LLM_REASONING_EFFORT=   # leave empty` makes the variable non-empty, and
+    the provider then receives reasoning_effort="# leave empty".
+    """
+    kept = [
+        name for name in COURSE_VARS if os.getenv(name, "").lstrip().startswith("#")
+    ]
+    if kept:
+        fail(
+            "E07 .env",
+            f"{', '.join(kept)} hold a comment as their value",
+            "put comments on their own lines; an empty value must end its line",
+        )
+        return False
+    return record(True, "values", "no comment kept as a value")
 
 
 def check_no_shadowing() -> bool:
@@ -311,6 +348,7 @@ def main() -> int:
         check_packages,
         check_git,
         check_env_file,
+        check_comment_values,
         check_no_shadowing,
         check_config,
     )

@@ -6,25 +6,20 @@
 
 ## Что делать до первого занятия
 
-Установить Python 3.10 или новее, git и Docker Desktop. Docker понадобится со второго занятия.
+Установить Python 3.11 или новее, git и Docker Desktop. Docker понадобится со второго занятия.
 
-Получить доступ к модели по таблице каналов из предкурсового документа и положить рядом с `check_env.py` файл `.env`:
-
-```
-LLM_PROVIDER=openai_compat
-LLM_API_KEY=
-LLM_BASE_URL=
-MODEL_CHEAP=
-MODEL_STRONG=
-```
+Получить доступ к модели по таблице каналов из предкурсового документа, скопировать `.env.example` в `.env` рядом с `check_env.py` и заполнить блок модели; имена моделей для каждого канала — в том же документе. Блок Langfuse остается пустым до второго занятия.
 
 Поставить зависимости и запустить проверку:
 
 ```bash
 uv venv && uv pip install "langchain>=1.3,<2" "langgraph>=1.2,<2" "langchain-openai>=1.4,<2" \
-  "langchain-google-genai>=4.3,<5" "langfuse>=4.14,<5" "openai>=2.3,<3" "python-dotenv>=1.2,<2"
+  "langchain-google-genai>=4.3,<5" "langfuse>=4.14,<5" "openai>=2.3,<3" "python-dotenv>=1.2,<2" \
+  "langgraph-checkpoint-sqlite>=3.1,<4"
 uv run python check_env.py
 ```
+
+Позже понадобятся дополнительные пакеты, ставить их заранее не нужно: "trustcall>=0.0.39" к занятию 5; "fastapi>=0.141.1", "aiogram>=3", "langgraph-checkpoint-postgres>=3.1.2" и "psycopg[binary,pool]>=3.2,<4" к занятию 8; "agentevals>=0.0.9" и "openevals>=0.2.0" к занятию 11; "deepagents>=0.6,<0.7" к занятию 13 (требует Python 3.11); "langchain-mcp-adapters>=0.3" и "mcp>=1.29,<2" к занятию 14.
 
 Все строки должны быть PASS. Последняя проверка — главная: она делает два зависимых вызова инструмента в одном диалоге. Эндпоинт, отвечающий на одно сообщение, но не выдерживающий цепочку, для курса не годится и сломается уже на первом занятии.
 
@@ -32,9 +27,24 @@ uv run python check_env.py
 
 ## Занятия
 
+Аудиторных занятий 14: ноутбуки занятий 12 и 14 разбираются самостоятельно, их артефакты засчитываются так же.
+
 | Ноутбук | Тема |
 |---|---|
 | `notebooks/session-01-agent-as-a-loop.ipynb` | агент как цикл: вызов модели, инструмент, разбор ответа руками, затем нативный вызов |
 | `notebooks/session-02-langgraph-basics.ipynb` | LangGraph: состояние, узлы, ребра, ToolNode, локальная наблюдаемость |
+| `notebooks/session-03-create-agent-and-tools.ipynb` | слой LangChain 1.x: create_agent, middleware, проектирование инструментов |
+| `notebooks/session-04-short-term-memory.ipynb` | контекст и краткосрочная память, чекпоинтер |
+| `notebooks/session-05-long-term-memory.ipynb` | долгосрочная память, Store, trustcall |
+| `notebooks/session-06-streaming-and-hitl.ipynb` | стриминг и участие человека, interrupt() |
+| `notebooks/session-07-observability.ipynb` | наблюдаемость, Langfuse |
+| `notebooks/session-08-deploy.ipynb` | деплой: FastAPI, compose, Telegram |
+| `notebooks/session-09-multi-agent.ipynb` | мультиагентность, Send, исследовательский агент |
+| `notebooks/session-10-autoresearch.ipynb` | autoresearch, замороженная метрика |
+| `notebooks/session-11-evaluation.ipynb` | три уровня оценки качества |
+| `notebooks/session-12-harness-engineering.ipynb` | харнесс-инжиниринг (самостоятельное чтение) |
+| `notebooks/session-13-deep-agents.ipynb` | deepagents, совет моделей |
+| `notebooks/session-14-mcp.ipynb` | MCP (самостоятельное чтение) |
+| `notebooks/session-15-security.ipynb` | безопасность, опасная триада |
 
-Ноутбуки прогнаны на версиях, закрепленных выше: langchain 1.3.14, langgraph 1.2.9, langfuse SDK 4.14.1, Python 3.12.
+Ноутбуки прогнаны на версиях, закрепленных выше: langchain 1.3.14, langgraph 1.2.9, langchain-core 1.5.3, langfuse SDK 4.14.1, deepagents 0.6.12, mcp 1.29.0, Python 3.12.
