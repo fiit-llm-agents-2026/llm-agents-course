@@ -47,4 +47,6 @@ uv run python check_env.py
 | `notebooks/session-14-mcp.ipynb` | MCP (самостоятельное чтение) |
 | `notebooks/session-15-security.ipynb` | безопасность, опасная триада |
 
+Эталонный ассистент курса, по которому догоняют пропустившие занятие: https://github.com/fiit-llm-agents-2026/agents-course-assistant, тег на конец каждого занятия.
+
 Ноутбуки прогнаны на версиях, закрепленных выше: langchain 1.3.14, langgraph 1.2.9, langchain-core 1.5.3, langfuse SDK 4.14.1, deepagents 0.6.12, mcp 1.29.0, Python 3.12.

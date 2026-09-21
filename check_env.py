@@ -96,6 +96,9 @@ def chat_model(size: str = "cheap", **kwargs):
     effort = os.getenv("LLM_REASONING_EFFORT", "").strip()
     if effort:  # gpt-5.x over chat completions: tools only with reasoning "none"
         kwargs.setdefault("reasoning_effort", effort)
+    # a stalled provider must fail with a name, not hang for the SDK's ten minutes
+    kwargs.setdefault("timeout", 60)
+    kwargs.setdefault("max_retries", 1)
     if provider() == "google_genai":
         return init_chat_model(f"google_genai:{name}", api_key=secret, **kwargs)
     return init_chat_model(
@@ -298,6 +301,12 @@ def _explain_exception(error: Exception) -> bool:
             "E10 auth",
             text[:160],
             "check LLM_API_KEY and LLM_BASE_URL against your provider's page",
+        )
+    elif "timed out" in lowered or "timeout" in lowered:
+        fail(
+            "E31 timeout",
+            text[:160],
+            "the provider did not answer within 60 s; run again, and change provider if it repeats",
         )
     elif "429" in lowered or "quota" in lowered or "rate limit" in lowered:
         fail(
