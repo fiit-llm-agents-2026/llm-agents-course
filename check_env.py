@@ -223,6 +223,36 @@ def check_config() -> bool:
     return record(True, "config", line)
 
 
+def check_polza() -> bool:
+    """Polza ignores reasoning_effort in the request body; the switch is a model-id suffix.
+
+    Measured on session 1: without the suffix the same run costs five times as
+    much, because every call pays for hidden reasoning. A key with a fixed limit
+    does not survive the semester that way.
+    """
+    if "polza.ai" not in os.getenv("LLM_BASE_URL", ""):
+        return True  # another provider: nothing to check, nothing to print
+    if os.getenv("LLM_REASONING_EFFORT", "").strip():
+        fail(
+            "E08 polza",
+            "LLM_REASONING_EFFORT is set, and Polza ignores it silently",
+            "leave it empty and end both model ids with @reasoning_effort=none",
+        )
+        return False
+    thinking = [
+        name
+        for name in ("MODEL_CHEAP", "MODEL_STRONG")
+        if "@reasoning_effort=" not in os.getenv(name, "")
+    ]
+    if thinking:
+        return record(
+            True,
+            "polza",
+            f"WARNING {', '.join(thinking)} without @reasoning_effort=none: about 5x the cost",
+        )
+    return record(True, "polza", "reasoning switched off in the model id")
+
+
 def check_tool_loop() -> bool:
     """Two dependent tool calls in one conversation."""
     from langchain_core.messages import HumanMessage, ToolMessage
@@ -360,6 +390,7 @@ def main() -> int:
         check_comment_values,
         check_no_shadowing,
         check_config,
+        check_polza,
     )
     for step in ordered:
         if not step():
